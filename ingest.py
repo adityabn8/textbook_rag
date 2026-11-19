@@ -83,19 +83,22 @@ def ingest_textbooks(force_rebuild=True):
         shutil.rmtree(QDRANT_PATH)
 
     logger.info("Initializing Qdrant at '%s' with Hybrid Search...", QDRANT_PATH)
-    qdrant_url = os.getenv("QDRANT_URL")
-    qdrant_api_key = os.getenv("QDRANT_API_KEY")
+    qdrant_url = (os.getenv("QDRANT_URL") or "").strip()
+    qdrant_api_key = (os.getenv("QDRANT_API_KEY") or "").strip() or None
 
     if qdrant_url:
+        logger.info("Connecting to Qdrant Cloud at '%s'...", qdrant_url)
         client = qdrant_client.QdrantClient(
             url=qdrant_url,
             api_key=qdrant_api_key,
             prefer_grpc=True,
         )
     else:
-        if not os.path.exists(QDRANT_PATH):
-            raise FileNotFoundError(f"Qdrant DB not found at '{QDRANT_PATH}'. Run ingest.py first.")
+        if force_rebuild and os.path.exists(QDRANT_PATH):
+            shutil.rmtree(QDRANT_PATH)
+        logger.info("Initializing Local Qdrant at '%s'...", QDRANT_PATH)
         client = qdrant_client.QdrantClient(path=QDRANT_PATH)
+
 
     vector_store = QdrantVectorStore(
         client=client,

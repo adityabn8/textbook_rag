@@ -23,9 +23,7 @@ class TextbookRAG:
     def __init__(self, qdrant_path: str = "./qdrant_db"):
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
-            raise ValueError("GEMINI_API_KEY missing in .env file.")
-        if not os.path.exists(qdrant_path):
-            raise FileNotFoundError(f"Qdrant DB not found at '{qdrant_path}'. Run ingest.py first.")
+            raise ValueError("GEMINI_API_KEY missing in environment variables.")
 
         Settings.embed_model = GoogleGenAIEmbedding(
             model_name="gemini-embedding-001",
@@ -36,10 +34,12 @@ class TextbookRAG:
             api_key=api_key,
         )
 
-        qdrant_url = os.getenv("QDRANT_URL")
-        qdrant_api_key = os.getenv("QDRANT_API_KEY")
+        # Dual-mode Qdrant connection: Cloud first, Local Disk fallback
+        qdrant_url = (os.getenv("QDRANT_URL") or "").strip()
+        qdrant_api_key = (os.getenv("QDRANT_API_KEY") or "").strip() or None
 
         if qdrant_url:
+            print(f"Connecting to Qdrant Cloud: {qdrant_url}")
             self.client = qdrant_client.QdrantClient(
                 url=qdrant_url,
                 api_key=qdrant_api_key,
@@ -47,7 +47,10 @@ class TextbookRAG:
             )
         else:
             if not os.path.exists(qdrant_path):
-                raise FileNotFoundError(f"Qdrant DB not found at '{qdrant_path}'. Run ingest.py first.")
+                raise FileNotFoundError(
+                    f"Qdrant DB not found at '{qdrant_path}' and QDRANT_URL is not set."
+                )
+            print(f"Connecting to Local Qdrant Disk DB: {qdrant_path}")
             self.client = qdrant_client.QdrantClient(path=qdrant_path)
 
         vector_store = QdrantVectorStore(
