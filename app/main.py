@@ -9,6 +9,7 @@ from app.rag_engine import TextbookRAG
 from app.schemas import QueryRequest, QueryResponse
 from app.schemas import ChaptersResponse, QueryRequest, QueryResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 rag_engine: TextbookRAG | None = None
 
@@ -69,6 +70,15 @@ def list_chapters():
         raise HTTPException(status_code=503, detail="RAG engine not initialized.")
 
     return {"chapters": rag_engine.get_chapters()}
+
+
+@app.api_route("/", methods=["GET", "HEAD"])
+def serve_root():
+    index_path = os.path.join(FRONTEND_DIST, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path, media_type="text/html")
+    return {"status": "Frontend not built"}
+
 
 # 3. Frontend mount MUST go at the very bottom
 FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
