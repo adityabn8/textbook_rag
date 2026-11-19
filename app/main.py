@@ -1,3 +1,5 @@
+import os
+import json
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,6 +8,7 @@ from google.genai.errors import ClientError, ServerError
 from app.rag_engine import TextbookRAG
 from app.schemas import QueryRequest, QueryResponse
 from app.schemas import ChaptersResponse, QueryRequest, QueryResponse
+from fastapi.staticfiles import StaticFiles
 
 rag_engine: TextbookRAG | None = None
 
@@ -66,3 +69,8 @@ def list_chapters():
         raise HTTPException(status_code=503, detail="RAG engine not initialized.")
 
     return {"chapters": rag_engine.get_chapters()}
+
+# 3. Frontend mount MUST go at the very bottom
+FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+if os.path.exists(FRONTEND_DIST):
+    app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")

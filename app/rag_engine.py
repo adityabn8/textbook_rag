@@ -36,7 +36,20 @@ class TextbookRAG:
             api_key=api_key,
         )
 
-        self.client = qdrant_client.QdrantClient(path=qdrant_path)
+        qdrant_url = os.getenv("QDRANT_URL")
+        qdrant_api_key = os.getenv("QDRANT_API_KEY")
+
+        if qdrant_url:
+            self.client = qdrant_client.QdrantClient(
+                url=qdrant_url,
+                api_key=qdrant_api_key,
+                prefer_grpc=True,
+            )
+        else:
+            if not os.path.exists(qdrant_path):
+                raise FileNotFoundError(f"Qdrant DB not found at '{qdrant_path}'. Run ingest.py first.")
+            self.client = qdrant_client.QdrantClient(path=qdrant_path)
+
         vector_store = QdrantVectorStore(
             client=self.client,
             collection_name="exam_prep",
@@ -96,6 +109,51 @@ class TextbookRAG:
                 break
 
         return sorted(chapters)
+
+    def ask_stream(
+        self,
+        question: str,
+        marks: int = 2,
+        question_type: str = "subjective",
+        chapter: str | None = None,
+    ):
+        params = self._resolve_exam_params(marks, question_type)
+
+        filters = None
+        if chapter:
+            filters = MetadataFilters(
+                filters=[MetadataFilter(key="file_name", value=chapter)]
+            )
+
+        query_engine = self.index.as_query_engine(
+            vector_store_query_mode="hybrid",
+            similarity_top_k=params["dense_k"],
+            sparse_top_k=params["sparse_k"],
+            alpha=params["alpha"],
+            filters=filters,
+            streaming=True,
+        )
+        query_engine.update_prompts({"response_synthesizer:text_qa_template": QA_PROMPT})
+
+        formatted_query = f"{question}\n\n[Exam Formatting Instruction: {params['format_rule']}]"
+        streaming_response = query_engine.query(formatted_query)
+
+        # 1. Stream each generated word/token as a Server-Sent Event (SSE)
+        for token in streaming_response.response_gen:
+            yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
+
+        # 2. Send the retrieved textbook citations once generation finishes
+        sources = [
+            {
+                "file_name": node.metadata.get("file_name", "Unknown"),
+                "score": round(node.score or 0.0, 4),
+                "text_preview": node.get_content()[:200].replace("\n", " ") + "...",
+            }
+            for node in streaming_response.source_nodes
+        ]
+        yield f"data: {json.dumps({'type': 'sources', 'sources': sources})}\n\n"
+        yield "data: [DONE]\n\n"
+
 
     
     def ask(
