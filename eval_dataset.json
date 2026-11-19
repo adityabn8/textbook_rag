@@ -1,0 +1,23 @@
+[
+  {
+    "question": "Explain the reasons for Rajvir's excitement on seeing the tea plantation.",
+    "marks": 3,
+    "question_type": "subjective",
+    "chapter": "jeff107.pdf",
+    "ground_truth": "Rajvir had never seen so much greenery before. The soft green paddy fields gave way to tea bushes stretching as far as the eye could see against densely wooded hills, creating a magnificent view that thrilled him."
+  },
+  {
+    "question": "Why did Lencho write a letter to God?",
+    "marks": 2,
+    "question_type": "subjective",
+    "chapter": "jeff101.pdf",
+    "ground_truth": "A hailstorm completely destroyed Lencho's corn crop, leaving his family with nothing to eat. Having deep faith in God, he wrote a letter asking God for a hundred pesos to sow his field again and live until the next harvest."
+  },
+  {
+    "question": "What is the formula for calculating gravitational potential energy in quantum mechanics?",
+    "marks": 2,
+    "question_type": "subjective",
+    "chapter": null,
+    "ground_truth": "The textbook does not cover this."
+  }
+]

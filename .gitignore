@@ -1,0 +1,55 @@
+# ==========================================
+# 1. SECRETS & ENVIRONMENT VARIABLES (CRITICAL)
+# ==========================================
+.env
+.env.*
+!.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# ==========================================
+# 2. PYTHON VIRTUAL ENV & BYTECODE
+# ==========================================
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# ==========================================
+# 3. LOCAL VECTOR DATABASES & CACHES
+# ==========================================
+qdrant_db/
+qdrant_storage/
+textbook_db/
+bm25_index/
+parsed_chapters.json
+
+# ==========================================
+# 4. TEXTBOOK PDFS & EVALUATION REPORTS
+# ==========================================
+# Keep the textbook/ folder structure, ignore large copyrighted PDFs
+textbook/*.pdf
+!textbook/.gitkeep
+eval_reports/
+
+# ==========================================
+# 5. NODE.JS & REACT (VITE) BUILD ARTIFACTS
+# ==========================================
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+npm-debug.log*
+
+# ==========================================
+# 6. OS & IDE FILES
+# ==========================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
