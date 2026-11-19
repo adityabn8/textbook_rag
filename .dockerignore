@@ -1,0 +1,12 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+.git/
+qdrant_db/
+qdrant_storage/
+textbook/
+eval_reports/
+frontend/node_modules/
+frontend/dist/
